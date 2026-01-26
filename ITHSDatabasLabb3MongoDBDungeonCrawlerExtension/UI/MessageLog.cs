@@ -5,42 +5,48 @@ namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
 
 internal class MessageLog
 {
-    private readonly List<string> _messages = new() { "", "", "", "", "" };
-    private readonly int _maxMessages = 5;
+    private readonly List<string> _messages = new();
+    private readonly int _maxVisible = 5;
 
-    public MessageLog(int atartRow, int maxWidth)
+    public MessageLog(int startRow, int maxWidth)
     {
-        StartRow = atartRow;
+        StartRow = startRow;
         MaxWidth = maxWidth;
     }
 
-    private int StartRow { get; set; }
-    private int MaxWidth { get; set; }
+    private int StartRow { get; }
+    private int MaxWidth { get; }
 
     public void Draw()
     {
-        Renderer.DrawBox(new Position(StartRow + 1, 0), _maxMessages + 2, MaxWidth);
+        Renderer.DrawBox(new Position(StartRow + 1, 0), _maxVisible + 2, MaxWidth);
 
-        Console.SetCursorPosition(1, StartRow + 2);
+        var visible = _messages
+            .TakeLast(_maxVisible)
+            .ToList();
 
-        foreach (string message in _messages)
+        int blanks = _maxVisible - visible.Count;
+        for (int i = 0; i < blanks; i++)
+            visible.Insert(0, "");
+
+        for (int i = 0; i < _maxVisible; i++)
         {
-            Console.SetCursorPosition(2, Console.CursorTop);
+            int row = StartRow + 2 + i;
+            Console.SetCursorPosition(2, row);
 
-            string messageLine = $"{message}{new string(' ', MaxWidth - 2)}{new string(' ', MaxWidth - 2)}";
-            messageLine = messageLine.Substring(0, MaxWidth - 3);
-            Console.WriteLine(messageLine);
+            string msg = visible[i] ?? "";
+            msg = msg.Length > (MaxWidth - 3) ? msg.Substring(0, MaxWidth - 3) : msg;
+            msg = msg.PadRight(MaxWidth - 3, ' ');
+
+            Console.Write(msg);
         }
     }
 
-    public void AddMassage(string newMessages)
+    public void AddMassage(string newMessage)
     {
-        _messages.Add(newMessages);
-
-        if (_messages.Count > _maxMessages)
-            _messages.RemoveAt(0);
-
+        _messages.Add(newMessage);
         Draw();
+
         Thread.Sleep(500);
 
         while (Console.KeyAvailable)
