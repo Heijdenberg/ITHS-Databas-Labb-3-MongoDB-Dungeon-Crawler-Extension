@@ -1,156 +1,137 @@
 ﻿using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Elements;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Core;
 
 internal class LevelData
 {
-    private List<LevelElement> _elements = new();
+    private readonly List<LevelElement> _elements = new();
     private int _levelWidth = 0;
+
     public int LevelHeight { get; set; }
+
     public int LevelWidth
     {
-        get
-        {
-            return _levelWidth;
-        }
+        get => _levelWidth;
         set
         {
             if (value > _levelWidth)
-            {
                 _levelWidth = value;
-            }
         }
     }
-    public List<LevelElement> Elements
-    {
-        get
-        {
-            return _elements;
-        }
-    }
+
+    public List<LevelElement> Elements => _elements;
 
     public int[] Load(string path)
     {
         int[] startPosition = [0, 0];
-        using (StreamReader reader = new StreamReader(path))
-        {
-            string? line;
 
-            for (int i = 0; (line = reader.ReadLine()) != null; i++)
+        using StreamReader reader = new(path);
+        string? line;
+
+        for (int row = 0; (line = reader.ReadLine()) != null; row++)
+        {
+            string scanLine = line.TrimEnd(' ');
+
+            for (int col = 0; col < scanLine.Length; col++)
             {
-                for (int ii = 0; ii < line.Length; ii++)
+                switch (scanLine[col])
                 {
-                    switch (line[ii])
-                    {
-                        case '@':
-                            startPosition = [i, ii];
-                            break;
-                        case '#':
-                            _elements.Add(new Wall(i, ii));
-                            LevelWidth = ii;
-                            LevelHeight = i;
-                            break;
-                        case 'r':
-                            _elements.Add(new Rat(i, ii));
-                            break;
-                        case 's':
-                            _elements.Add(new Snake(i, ii));
-                            break;
-                    }
+                    case '@':
+                        startPosition = [row, col];
+                        break;
+
+                    case '#':
+                        _elements.Add(new Wall(row, col));
+
+                        LevelWidth = col;
+                        LevelHeight = row;
+                        break;
+
+                    case 'r':
+                        _elements.Add(new Rat(row, col));
+                        break;
+
+                    case 's':
+                        _elements.Add(new Snake(row, col));
+                        break;
                 }
             }
         }
+
         return startPosition;
     }
 
-    public LevelElement? GetElementAtPosition(int y, int x)
+
+    public LevelElement? GetElementAtPosition(int row, int col)
     {
-        LevelElement? inhabitant = null;
-
-
         for (int i = 0; i < Elements.Count; i++)
         {
-            if (Elements[i].Position.Y == y && Elements[i].Position.X == x)
-            {
-                inhabitant = Elements[i];
-            }
+            if (Elements[i].Position.Row == row && Elements[i].Position.Col == col)
+                return Elements[i];
         }
-        return inhabitant;
+        return null;
     }
-    public int GetElementIndexAtPosition(int y, int x)
-    {
-        int index = -1;
 
+    public int GetElementIndexAtPosition(int row, int col)
+    {
         for (int i = 0; i < Elements.Count; i++)
         {
-            if (Elements[i].Position.Y == y && Elements[i].Position.X == x)
-            {
-                index = i;
-            }
+            if (Elements[i].Position.Row == row && Elements[i].Position.Col == col)
+                return i;
         }
-        return index;
+        return -1;
     }
 
     public int GetEnemyCount()
     {
         int enemyCount = 0;
-
         foreach (LevelElement element in _elements)
         {
             if (element is Enemy)
-            {
                 enemyCount++;
-            }
         }
-
         return enemyCount;
     }
-    public void removeElement(int y, int x)
+
+    public void RemoveElement(int row, int col)
     {
-        int index = GetElementIndexAtPosition(y, x);
-        Elements.RemoveAt(index);
+        int index = GetElementIndexAtPosition(row, col);
+        if (index >= 0 && index < Elements.Count)
+            Elements.RemoveAt(index);
     }
 
     public void SolidWalls()
     {
         LevelElement[,] walls = new LevelElement[LevelHeight + 100, LevelWidth + 100];
 
-        foreach (LevelElement element in _elements.Where(e => e is Wall).Cast<Wall>())
+        foreach (LevelElement element in _elements.Where(e => e is Wall))
         {
             Wall wall = (Wall)element;
-            walls[wall.Position.Y, wall.Position.X] = wall;
+            walls[wall.Position.Row, wall.Position.Col] = wall;
         }
 
         foreach (LevelElement element in walls)
         {
-            if (element is not null)
-            {
-                int wallType = 0;
-                Wall wall = (Wall)element;
-                int y = wall.Position.Y;
-                int x = wall.Position.X;
+            if (element is null) continue;
 
-                int H = walls.GetLength(0);
-                int W = walls.GetLength(1);
+            int wallType = 0;
+            Wall wall = (Wall)element;
 
-                bool InBounds(int yy, int xx) => yy >= 0 && yy < H && xx >= 0 && xx < W;
-                bool IsWall(int yy, int xx) => InBounds(yy, xx) && walls[yy, xx] is not null;
+            int row = wall.Position.Row;
+            int col = wall.Position.Col;
 
-                if (IsWall(y - 1, x)) wallType |= 1;
-                if (IsWall(y, x + 1)) wallType |= 2;
-                if (IsWall(y + 1, x)) wallType |= 4;
-                if (IsWall(y, x - 1)) wallType |= 8;
+            int H = walls.GetLength(0);
+            int W = walls.GetLength(1);
 
-                wall.SetWall(wallType);
-            }
+            bool InBounds(int r, int c) => r >= 0 && r < H && c >= 0 && c < W;
+            bool IsWall(int r, int c) => InBounds(r, c) && walls[r, c] is not null;
+
+            if (IsWall(row, col - 1)) wallType |= 1;
+            if (IsWall(row + 1, col)) wallType |= 2;
+            if (IsWall(row, col + 1)) wallType |= 4;
+            if (IsWall(row - 1, col)) wallType |= 8;
+
+            wall.SetWall(wallType);
         }
     }
 }

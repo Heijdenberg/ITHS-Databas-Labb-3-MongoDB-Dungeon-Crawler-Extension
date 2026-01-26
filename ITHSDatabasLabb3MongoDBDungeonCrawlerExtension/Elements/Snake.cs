@@ -2,102 +2,65 @@
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Interfaces;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Elements;
 
 internal class Snake : Enemy, IPlayerAwareDrawable
 {
-    public Snake(int y, int x)
+    public Snake(int row, int col)
         : base(name: "Snake",
-            hp: 25,
-            attackDice: new Dice(3, 4, 2),
-            defenceDice: new Dice(1, 8, 5),
-            sprite: 's',
-            color: ConsoleColor.Green,
-            y, x)
+               hp: 25,
+               attackDice: new Dice(3, 4, 2),
+               defenceDice: new Dice(1, 8, 5),
+               sprite: 's',
+               color: ConsoleColor.Green,
+               row, col)
     { }
+
     public override void Update(LevelData levelData, MessageLog messageLog, Player player)
     {
-        if (HitPoints.HP > 0)
+        if (HitPoints.HP <= 0) return;
+
+        int row = Position.Row;
+        int col = Position.Col;
+
+        int rowDif = player.Position.Row - row;
+        int colDif = player.Position.Col - col;
+
+        if (GameMath.IsWithinRange(Position, player.Position, 2.0))
         {
-            int y = Position.Y;
-            int x = Position.X;
-
-            int yDif = player.Position.Y - y;
-            int xDif = player.Position.X - x;
-
-            if (GameMath.IsWithinRange(Position, player.Position, 2.0))
+            if (Math.Abs(rowDif) == Math.Abs(colDif))
             {
-                if (Math.Abs(yDif) == Math.Abs(xDif))
-                {
-                    int randomDirection = GameRandom.Random.Next(0, 2);
-                    if (randomDirection == 0)
-                    {
-                        if (yDif > 0.0)
-                        {
-                            y--;
-                        }
-                        else
-                        {
-                            y++;
-                        }
-                    }
-                    else
-                    {
-                        if (xDif > 0.0)
-                        {
-                            x--;
-                        }
-                        else
-                        {
-                            x++;
-                        }
-                    }
-                }
-                else if (Math.Abs(yDif) > Math.Abs(xDif))
-                {
-                    if (yDif > 0.0)
-                    {
-                        y--;
-                    }
-                    else
-                    {
-                        y++;
-                    }
-                }
+                int randomAxis = GameRandom.Random.Next(0, 2);
+
+                if (randomAxis == 0)
+                    row += (rowDif > 0 ? -1 : 1);
                 else
-                {
-                    if (xDif > 0.0)
-                    {
-                        x--;
-                    }
-                    else
-                    {
-                        x++;
-                    }
-                }
+                    col += (colDif > 0 ? -1 : 1);
             }
-
-            LevelElement? nextPostionInhabitant = levelData.GetElementAtPosition(y, x);
-
-            if (nextPostionInhabitant == null)
+            else if (Math.Abs(rowDif) > Math.Abs(colDif))
             {
-                Renderer.AddToRemoveList(Position);
-                Position.Y = y;
-                Position.X = x;
+                row += (rowDif > 0 ? -1 : 1);
             }
+            else
+            {
+                col += (colDif > 0 ? -1 : 1);
+            }
+        }
+
+        LevelElement? next = levelData.GetElementAtPosition(row, col);
+
+        if (next is null)
+        {
+            Renderer.AddToRemoveList(Position);
+            Position.Row = row;
+            Position.Col = col;
         }
     }
 
-    public override void Death(LevelData leveldata, MessageLog messageLog, ICombatant killer)
+    public override void Death(LevelData levelData, MessageLog messageLog, ICombatant killer)
     {
-        base.Death(leveldata, messageLog, killer);
+        base.Death(levelData, messageLog, killer);
 
         int modifierGain = 2;
         killer.AttackDice.Modifier = modifierGain;

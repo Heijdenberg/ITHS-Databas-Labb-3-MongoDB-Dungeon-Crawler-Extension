@@ -2,22 +2,17 @@
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Elements;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Interfaces;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Core;
 
 internal class Renderer
 {
-    private LevelData _levelData;
-    private Player _player;
-    private MessageLog _messageLog;
-    private Sidebar _sidebar;
-    static private List<Position> _removeList = new();
+    private readonly LevelData _levelData;
+    private readonly Player _player;
+    private readonly MessageLog _messageLog;
+    private readonly Sidebar _sidebar;
+
+    private static readonly List<Position> _removeList = new();
 
     public Renderer(LevelData levelData, Player player, MessageLog messageLog, Sidebar sidebar)
     {
@@ -30,21 +25,16 @@ internal class Renderer
     public void DrawAll()
     {
         foreach (Position position in _removeList)
-        {
-            EraseAtCords(position);
-        }
+            EraseAtCoords(position);
+
         _removeList.Clear();
 
         foreach (LevelElement element in _levelData.Elements)
         {
             if (element is IPlayerAwareDrawable playerAwareDrawable)
-            {
                 playerAwareDrawable.Draw(_player);
-            }
             else
-            {
                 element.Draw();
-            }
         }
 
         _player.Draw();
@@ -52,41 +42,27 @@ internal class Renderer
         _sidebar.Draw();
     }
 
-    static public void AddToRemoveList(Position position)
+    public static void AddToRemoveList(Position position)
     {
-        _removeList.Add(new Position(position.Y, position.X));
+        _removeList.Add(new Position(position.Row, position.Col));
     }
 
-    static public void EraseAtCords(Position position)
+    public static void EraseAtCoords(Position position)
     {
-        Console.SetCursorPosition(position.X, position.Y);
+        Console.SetCursorPosition(position.Col, position.Row);
         Console.Write(' ');
     }
 
-    static public void DrawBox(Position startPos, int hight, int width)
+    public static void DrawBox(Position startPos, int height, int width)
     {
-        if (width < 3)
-        {
-            width = 3;
-        }
+        if (width < 3) width = 3;
+        if (height < 3) height = 3;
 
-        if (hight < 3)
-        {
-            hight = 3;
-        }
-
-        Console.SetCursorPosition(startPos.Y, startPos.X);
+        Console.SetCursorPosition(startPos.Col, startPos.Row);
 
         Console.WriteLine($"╔{new string('═', width - 2)}╗");
-        for (int ii = 0; ii < hight-2; ii++)
-        {
+        for (int i = 0; i < height - 2; i++)
             Console.WriteLine($"║{new string(' ', width - 2)}║");
-        }
         Console.WriteLine($"╚{new string('═', width - 2)}╝");
-
     }
 }
-
-
-
-

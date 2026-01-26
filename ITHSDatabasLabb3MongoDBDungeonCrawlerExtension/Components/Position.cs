@@ -8,12 +8,13 @@ namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Components;
 
 internal class Position
 {
-    public int Y { get; set; }
-    public int X { get; set; }
+    public int Row { get; set; }
+    public int Col { get; set; }
 
-    public Position(int y, int x)
+    public Position(int row, int col)
     {
-        X = y;
-        Y = x;
+        Row = row;
+        Col = col;
     }
 }
+

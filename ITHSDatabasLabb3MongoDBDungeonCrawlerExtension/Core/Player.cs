@@ -2,23 +2,17 @@
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Elements;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Interfaces;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Utilities;
 
 namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Core;
 
 internal class Player : LevelElement, ICombatant
 {
     public Player(int[] startPosition, string name)
-        : base(
-            sprite: '@',
-            spriteColor: ConsoleColor.Cyan,
-            startPosition[0], startPosition[1])
+        : base(sprite: '@',
+               spriteColor: ConsoleColor.Cyan,
+               row: startPosition[0],
+               col: startPosition[1])
     {
         Name = name;
         AttackDice = new(2, 6, 2);
@@ -26,6 +20,7 @@ internal class Player : LevelElement, ICombatant
         HitPoints = new HitPoints(100);
         VisionRange = 5;
     }
+
     public string Name { get; }
     public HitPoints HitPoints { get; set; }
     public Dice AttackDice { get; }
@@ -36,43 +31,31 @@ internal class Player : LevelElement, ICombatant
     {
         messageLog.AddMassage($"{Name} is dead, slayed by {killer.Name}");
         Thread.Sleep(800);
-        GameOverScreen gameOver = new();
-        gameOver.GameOver(levelData.LevelHeight, levelData.LevelWidth);
+        new GameOverScreen().GameOver(levelData.LevelHeight, levelData.LevelWidth);
     }
+
     public void Update(ConsoleKey direction, LevelData levelData, MessageLog messageLog)
     {
-        int y = Position.Y;
-        int x = Position.X;
+        int row = Position.Row;
+        int col = Position.Col;
 
-        if (direction == ConsoleKey.UpArrow || direction == ConsoleKey.W)
-        {
-            x--;
-        }
-        else if (direction == ConsoleKey.LeftArrow || direction == ConsoleKey.A)
-        {
-            y--;
-        }
-        else if (direction == ConsoleKey.DownArrow || direction == ConsoleKey.S)
-        {
-            x++;
-        }
-        else if (direction == ConsoleKey.RightArrow || direction == ConsoleKey.D)
-        {
-            y++;
-        }
-        LevelElement nextPostionInhabitant = levelData.GetElementAtPosition(y, x);
+        if (direction == ConsoleKey.UpArrow || direction == ConsoleKey.W) row--;
+        else if (direction == ConsoleKey.DownArrow || direction == ConsoleKey.S) row++;
+        else if (direction == ConsoleKey.LeftArrow || direction == ConsoleKey.A) col--;
+        else if (direction == ConsoleKey.RightArrow || direction == ConsoleKey.D) col++;
 
-        if (nextPostionInhabitant == null)
+        LevelElement? next = levelData.GetElementAtPosition(row, col);
+
+        if (next is null)
         {
             Renderer.AddToRemoveList(Position);
-            Position.Y = y;
-            Position.X = x;
+            Position.Row = row;
+            Position.Col = col;
         }
-        else if (nextPostionInhabitant is Enemy)
+        else if (next is Enemy)
         {
             messageLog.AddMassage("Found an Enemy!");
-            Combat combat = new(this, (ICombatant)nextPostionInhabitant);
-            combat.Battle(messageLog, levelData);
+            new Combat(this, (ICombatant)next).Battle(messageLog, levelData);
         }
     }
 }
