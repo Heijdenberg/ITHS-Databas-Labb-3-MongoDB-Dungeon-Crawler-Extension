@@ -17,14 +17,13 @@ internal class MessageLog
     private int StartRow { get; }
     private int MaxWidth { get; }
 
+    public IReadOnlyList<string> Messages => _messages;
+
     public void Draw()
     {
         Renderer.DrawBox(new Position(StartRow + 1, 0), _maxVisible + 2, MaxWidth);
 
-        var visible = _messages
-            .TakeLast(_maxVisible)
-            .ToList();
-
+        var visible = _messages.TakeLast(_maxVisible).ToList();
         int blanks = _maxVisible - visible.Count;
         for (int i = 0; i < blanks; i++)
             visible.Insert(0, "");
@@ -48,7 +47,6 @@ internal class MessageLog
         Draw();
 
         Thread.Sleep(500);
-
         while (Console.KeyAvailable)
             Console.ReadKey(intercept: true);
     }

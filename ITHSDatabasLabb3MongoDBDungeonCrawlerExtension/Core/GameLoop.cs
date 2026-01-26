@@ -37,6 +37,14 @@ internal class GameLoop
         while (true)
         {
             ConsoleKey thePressedKey = Console.ReadKey(intercept: true).Key;
+
+            if (thePressedKey == ConsoleKey.M)
+            {
+                new MessageLogViewer(_messageLog).Run();
+                _renderer.DrawAll();
+                continue;
+            }
+
             _player.Update(thePressedKey, _levelData, _messageLog);
             _renderer.DrawAll();
             UpdateEnemys();
