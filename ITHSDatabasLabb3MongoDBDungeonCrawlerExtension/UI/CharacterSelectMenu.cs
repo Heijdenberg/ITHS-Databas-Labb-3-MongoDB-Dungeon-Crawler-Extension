@@ -24,7 +24,8 @@ internal static class CharacterSelectMenu
                 for (int i = 0; i < saves.Count; i++)
                 {
                     var s = saves[i];
-                    Console.WriteLine($"{i + 1}. {s.PlayerName}  (Last played: {s.LastPlayedUtc:yyyy-MM-dd HH:mm})");
+                    string deadTag = s.IsDead ? " — DEAD" : "";
+                    Console.WriteLine($"{i + 1}. {s.PlayerName}{deadTag}  (Last played: {s.LastPlayedUtc:yyyy-MM-dd HH:mm})");
                 }
             }
 
@@ -47,6 +48,13 @@ internal static class CharacterSelectMenu
 
                 if (idx >= 0 && idx < saves.Count)
                 {
+                    if (saves[idx].IsDead)
+                    {
+                        Console.WriteLine("\nThat character is dead and cannot be loaded. Press any key...");
+                        Console.ReadKey(true);
+                        continue;
+                    }
+
                     repo.TouchLastPlayed(saves[idx].Id);
                     return repo.GetSave(saves[idx].Id) ?? saves[idx];
                 }

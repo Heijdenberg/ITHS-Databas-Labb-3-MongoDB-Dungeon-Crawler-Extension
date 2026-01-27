@@ -85,14 +85,17 @@ internal class GameLoop
 
                 VictoryScreen victoryScreen = new();
                 victoryScreen.Victory(_levelData.LevelHeight, _levelData.LevelWidth);
+                return;
             }
 
             if (_player.HitPoints.HP <= 0)
             {
                 SaveSnapshotOnly();
+                _repo.MarkDead(_activeSave.Id);
 
                 GameOverScreen gameOverScreen = new();
                 gameOverScreen.GameOver(_levelData.LevelHeight, _levelData.LevelWidth);
+                return;
             }
         }
     }

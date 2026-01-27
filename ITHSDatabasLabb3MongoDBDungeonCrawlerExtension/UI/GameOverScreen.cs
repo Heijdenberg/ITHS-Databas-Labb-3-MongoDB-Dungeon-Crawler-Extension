@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
 
@@ -35,6 +32,7 @@ internal class GameOverScreen
 
         Console.SetCursorPosition(0, height);
         Console.ReadKey();
-        Environment.Exit(0);
+
+        return;
     }
 }

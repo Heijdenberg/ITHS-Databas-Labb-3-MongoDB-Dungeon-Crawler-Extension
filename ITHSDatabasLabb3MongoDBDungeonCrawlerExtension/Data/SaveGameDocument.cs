@@ -43,6 +43,13 @@ internal sealed class SaveGameDocument
 
     [BsonElement("initialEnemyCount")]
     public int InitialEnemyCount { get; set; }
+
+    [BsonElement("isDead")]
+    public bool IsDead { get; set; }
+
+    [BsonElement("diedUtc")]
+    public DateTime? DiedUtc { get; set; }
+
 }
 
 internal sealed class PlayerStateDocument

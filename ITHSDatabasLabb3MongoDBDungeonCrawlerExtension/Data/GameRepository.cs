@@ -143,4 +143,14 @@ internal sealed class GameRepository
 
         _saves.UpdateOne(x => x.Id == saveId, update);
     }
+    public void MarkDead(ObjectId saveId)
+    {
+        var update = Builders<SaveGameDocument>.Update
+            .Set(x => x.IsDead, true)
+            .Set(x => x.DiedUtc, DateTime.UtcNow)
+            .Set(x => x.LastPlayedUtc, DateTime.UtcNow);
+
+        _saves.UpdateOne(x => x.Id == saveId, update);
+    }
+
 }

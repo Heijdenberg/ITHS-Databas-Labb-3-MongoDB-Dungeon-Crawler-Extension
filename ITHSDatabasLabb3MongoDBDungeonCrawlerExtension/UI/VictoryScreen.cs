@@ -32,7 +32,6 @@ namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI
 
             Console.SetCursorPosition(0, height);
             Console.ReadKey();
-            Environment.Exit(0);
         }
     }
 }

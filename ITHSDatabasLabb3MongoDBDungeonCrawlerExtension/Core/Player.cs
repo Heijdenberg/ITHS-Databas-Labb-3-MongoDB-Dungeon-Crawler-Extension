@@ -30,8 +30,7 @@ internal class Player : LevelElement, ICombatant
     public void Death(LevelData levelData, MessageLog messageLog, ICombatant killer)
     {
         messageLog.AddMassage($"{Name} is dead, slayed by {killer.Name}");
-        Thread.Sleep(800);
-        new GameOverScreen().GameOver(levelData.LevelHeight, levelData.LevelWidth);
+        HitPoints.HP = 0;
     }
 
     public void Update(ConsoleKey direction, LevelData levelData, MessageLog messageLog)
