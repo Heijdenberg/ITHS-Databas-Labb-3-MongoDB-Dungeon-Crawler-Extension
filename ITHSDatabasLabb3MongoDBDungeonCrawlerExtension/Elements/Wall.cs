@@ -11,11 +11,22 @@ internal class Wall : LevelElement, IPlayerAwareDrawable
     {
     }
 
+    public bool IsDiscovered { get; set; }
+
     public void Draw(Player player)
     {
         if (GameMath.IsWithinRange(Position, player.Position, player.VisionRange))
         {
+            IsDiscovered = true;
             base.Draw();
+        }
+        else if (IsDiscovered)
+        {
+            base.Draw();
+        }
+        else
+        {
+            Renderer.AddToRemoveList(Position);
         }
     }
 

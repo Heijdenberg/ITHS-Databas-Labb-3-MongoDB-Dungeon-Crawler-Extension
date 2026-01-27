@@ -17,14 +17,15 @@ internal class Sidebar
     private int _enemyStartCount;
     private LevelData _levelData;
 
-    public Sidebar(int levelHeight, int levelWidth, Player player, LevelData levelData)
+    public Sidebar(int levelHeight, int levelWidth, Player player, LevelData levelData, int initialEnemyCount)
     {
         _height = 5;
         _width = 24;
         _x = levelWidth + 1;
         _player = player;
         _levelData = levelData;
-        _enemyStartCount = levelData.GetEnemyCount();
+
+        _enemyStartCount = initialEnemyCount;
     }
 
     public int TurnCount

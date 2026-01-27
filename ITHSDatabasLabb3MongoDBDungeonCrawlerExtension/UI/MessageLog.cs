@@ -50,4 +50,13 @@ internal class MessageLog
         while (Console.KeyAvailable)
             Console.ReadKey(intercept: true);
     }
+
+    public void LoadMessages(IEnumerable<string> messages, int keepLast = 200)
+    {
+        _messages.Clear();
+
+        _messages.AddRange(messages.TakeLast(keepLast));
+
+        Draw();
+    }
 }

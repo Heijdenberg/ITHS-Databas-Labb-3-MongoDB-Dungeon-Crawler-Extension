@@ -1,38 +1,59 @@
-﻿using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Elements;
+﻿using MongoDB.Bson;
+using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Data;
+using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Elements;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Core;
 
 internal class GameLoop
 {
-    private LevelData _levelData;
-    private Player _player;
-    private MessageLog _messageLog;
-    private Renderer _renderer;
-    private Sidebar _sidebar;
+    private readonly LevelData _levelData;
+    private readonly Player _player;
+    private readonly MessageLog _messageLog;
+    private readonly Renderer _renderer;
+    private readonly Sidebar _sidebar;
+
+    private readonly GameRepository _repo;
+    private readonly SaveGameDocument _activeSave;
+    private readonly int _initialEnemyCount;
+
+
     private int _turnCount;
 
-    public GameLoop(LevelData levelData, Player player, MessageLog messageLog, Sidebar sidebar)
+    public GameLoop(LevelData levelData,
+                    Player player,
+                    MessageLog messageLog,
+                    Sidebar sidebar,
+                    GameRepository repo,
+                    SaveGameDocument activeSave,
+                    int startTurnCount,
+                    int initialEnemyCount)
     {
         _levelData = levelData;
         _player = player;
         _messageLog = messageLog;
-        _renderer = new(levelData, player, messageLog, sidebar);
-        _turnCount = 0;
         _sidebar = sidebar;
+        _renderer = new(levelData, player, messageLog, sidebar);
+
+        _repo = repo;
+        _activeSave = activeSave;
+
+        _turnCount = startTurnCount;
+        _initialEnemyCount = initialEnemyCount;
+
+        _sidebar.TurnCount = _turnCount;
     }
 
     public void StartLoop()
     {
+        Console.Clear();
         _renderer.DrawAll();
-        StartMsg();
+
+        if (_activeSave.Messages is null || _activeSave.Messages.Count == 0)
+        {
+            StartMsg();
+            _renderer.DrawAll();
+        }
 
         while (true)
         {
@@ -45,23 +66,57 @@ internal class GameLoop
                 continue;
             }
 
+            if (thePressedKey == ConsoleKey.Escape || thePressedKey == ConsoleKey.Q)
+            {
+                SaveAndQuit();
+                return;
+            }
+
             _player.Update(thePressedKey, _levelData, _messageLog);
             _renderer.DrawAll();
+
             UpdateEnemys();
             IncrementTurnCount();
             _renderer.DrawAll();
 
             if (thePressedKey == ConsoleKey.Enter || _levelData.GetEnemyCount() <= 0)
             {
+                SaveSnapshotOnly();
+
                 VictoryScreen victoryScreen = new();
                 victoryScreen.Victory(_levelData.LevelHeight, _levelData.LevelWidth);
             }
-            else if (thePressedKey == ConsoleKey.Escape || _player.HitPoints.HP <= 0)
+
+            if (_player.HitPoints.HP <= 0)
             {
+                SaveSnapshotOnly();
+
                 GameOverScreen gameOverScreen = new();
                 gameOverScreen.GameOver(_levelData.LevelHeight, _levelData.LevelWidth);
             }
         }
+    }
+
+    private void SaveAndQuit()
+    {
+        _repo.UpdateSaveFull(_activeSave.Id,
+                             _activeSave,
+                             _levelData,
+                             _player,
+                             _messageLog,
+                             turnCount: _turnCount,
+                             initialEnemyCount: _initialEnemyCount);
+    }
+
+    private void SaveSnapshotOnly()
+    {
+        _repo.UpdateSaveFull(_activeSave.Id,
+                             _activeSave,
+                             _levelData,
+                             _player,
+                             _messageLog,
+                             turnCount: _turnCount,
+                             initialEnemyCount: _initialEnemyCount);
     }
 
     private void IncrementTurnCount()
@@ -69,16 +124,14 @@ internal class GameLoop
         _turnCount++;
         _sidebar.TurnCount = _turnCount;
     }
+
     private void UpdateEnemys()
     {
-        foreach (var element in _levelData.Elements
-                                 .OfType<Enemy>()
-                                 .ToList())
+        foreach (var enemy in _levelData.Elements
+                                        .OfType<Enemy>()
+                                        .ToList())
         {
-            if (element is Enemy enemy)
-            {
-                enemy.Update(_levelData, _messageLog, _player);
-            }
+            enemy.Update(_levelData, _messageLog, _player);
         }
     }
 

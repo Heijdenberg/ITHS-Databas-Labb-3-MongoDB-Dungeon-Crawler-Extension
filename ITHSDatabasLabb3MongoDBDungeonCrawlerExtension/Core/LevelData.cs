@@ -1,4 +1,5 @@
-﻿using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Elements;
+﻿using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Data;
+using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Elements;
 
 namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Core;
 
@@ -61,6 +62,47 @@ internal class LevelData
         return startPosition;
     }
 
+    public void LoadFromSave(SaveGameDocument save)
+    {
+        _elements.Clear();
+
+        LevelHeight = save.LevelHeight;
+        LevelWidth = save.LevelWidth;
+
+        foreach (var e in save.Elements)
+        {
+            switch (e.Type)
+            {
+                case "Wall":
+                    {
+                        var wall = new Wall(e.Row, e.Col)
+                        {
+                            IsDiscovered = e.IsDiscovered ?? false
+                        };
+                        _elements.Add(wall);
+                        break;
+                    }
+
+                case "Rat":
+                    {
+                        var rat = new Rat(e.Row, e.Col);
+                        if (e.Hp.HasValue) rat.HitPoints.HP = e.Hp.Value;
+                        _elements.Add(rat);
+                        break;
+                    }
+
+                case "Snake":
+                    {
+                        var snake = new Snake(e.Row, e.Col);
+                        if (e.Hp.HasValue) snake.HitPoints.HP = e.Hp.Value;
+                        _elements.Add(snake);
+                        break;
+                    }
+            }
+        }
+
+        SolidWalls();
+    }
 
     public LevelElement? GetElementAtPosition(int row, int col)
     {

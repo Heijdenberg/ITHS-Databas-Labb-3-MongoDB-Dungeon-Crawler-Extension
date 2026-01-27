@@ -20,17 +20,7 @@ internal class Dice
         _modifier = modifier;
     }
 
-    public int Modifier
-    {
-        get
-        {
-            return _modifier;
-        }
-        set
-        {
-            _modifier += value;
-        }
-    }
+    public int Modifier { get; set; }
 
     public int Throw()
     {

@@ -63,7 +63,7 @@ internal class Snake : Enemy, IPlayerAwareDrawable
         base.Death(levelData, messageLog, killer);
 
         int modifierGain = 2;
-        killer.AttackDice.Modifier = modifierGain;
+        killer.AttackDice.Modifier += modifierGain;
         messageLog.AddMassage($"You eat {Name} and you feal more powerful");
     }
 }
