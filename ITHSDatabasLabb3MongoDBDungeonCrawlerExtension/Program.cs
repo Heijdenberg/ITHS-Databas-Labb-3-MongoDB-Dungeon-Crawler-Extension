@@ -1,5 +1,7 @@
 ﻿using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Core;
+using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Data;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -12,6 +14,17 @@ internal class Program
 {
     static void Main()
     {
+        var config = new ConfigurationBuilder()
+        .AddUserSecrets<Program>()
+        .AddEnvironmentVariables()
+        .Build();
+
+        var mongoConnString =
+            config.GetConnectionString("MongoDb")
+            ?? "mongodb://localhost:27017";
+
+        var db = MongoDbSetup.EnsureDatabaseAndSeed(mongoConnString);
+
         Console.CursorVisible = false;
         Console.OutputEncoding = Encoding.UTF8;
 
