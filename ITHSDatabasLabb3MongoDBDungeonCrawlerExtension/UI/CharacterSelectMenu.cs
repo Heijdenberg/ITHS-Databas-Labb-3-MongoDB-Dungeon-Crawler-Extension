@@ -6,14 +6,14 @@ namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
 
 internal static class CharacterSelectMenu
 {
-    public static SaveGameDocument Run(GameRepository repo)
+    public static async Task<SaveGameDocument> RunAsync(GameRepository repo)
     {
         while (true)
         {
             Console.Clear();
             Console.WriteLine("=== CHARACTER SELECT ===\n");
 
-            var saves = repo.GetAllSaves();
+            var saves = await repo.GetAllSavesAsync();
 
             if (saves.Count == 0)
             {
@@ -39,7 +39,7 @@ internal static class CharacterSelectMenu
                 Environment.Exit(0);
 
             if (key.Key == ConsoleKey.N)
-                return CreateNewCharacterFlow(repo);
+                return await CreateNewCharacterFlowAsync(repo);
 
             if (char.IsDigit(key.KeyChar))
             {
@@ -55,14 +55,14 @@ internal static class CharacterSelectMenu
                         continue;
                     }
 
-                    repo.TouchLastPlayed(saves[idx].Id);
-                    return repo.GetSave(saves[idx].Id) ?? saves[idx];
+                    await repo.TouchLastPlayedAsync(saves[idx].Id);
+                    return await repo.GetSaveAsync(saves[idx].Id) ?? saves[idx];
                 }
             }
         }
     }
 
-    private static SaveGameDocument CreateNewCharacterFlow(GameRepository repo)
+    private static async Task<SaveGameDocument> CreateNewCharacterFlowAsync(GameRepository repo)
     {
         Console.Clear();
         Console.WriteLine("=== NEW CHARACTER ===\n");
@@ -72,19 +72,17 @@ internal static class CharacterSelectMenu
         if (string.IsNullOrWhiteSpace(name))
             name = "Player";
 
-        var archetypes = repo.GetAllArchetypes();
+        var archetypes = await repo.GetAllArchetypesAsync();
         if (archetypes.Count == 0)
         {
             Console.WriteLine("\nNo archetypes found in DB (seed failed?). Press any key...");
             Console.ReadKey(true);
-            return Run(repo);
+            return await RunAsync(repo);
         }
 
         Console.WriteLine("\nChoose archetype:");
         for (int i = 0; i < archetypes.Count; i++)
-        {
             Console.WriteLine($"{i + 1}. {archetypes[i].Name}");
-        }
 
         int archIndex = ReadChoice(1, archetypes.Count) - 1;
         ObjectId archetypeId = archetypes[archIndex].Id;
@@ -99,12 +97,12 @@ internal static class CharacterSelectMenu
 
         int initialEnemyCount = levelData.GetEnemyCount();
 
-        var save = repo.CreateNewSave(name, archetypeId, levelPath, startPosition);
+        var save = await repo.CreateNewSaveAsync(name, archetypeId, levelPath, startPosition);
 
         var tempPlayer = new Player(startPosition, name);
         var tempLog = new MessageLog(levelData.LevelHeight, levelData.LevelWidth);
 
-        repo.UpdateSaveFull(
+        await repo.UpdateSaveFullAsync(
             save.Id,
             save,
             levelData,
@@ -114,7 +112,7 @@ internal static class CharacterSelectMenu
             initialEnemyCount: initialEnemyCount
         );
 
-        return repo.GetSave(save.Id) ?? save;
+        return await repo.GetSaveAsync(save.Id) ?? save;
     }
 
     private static int ReadChoice(int min, int max)

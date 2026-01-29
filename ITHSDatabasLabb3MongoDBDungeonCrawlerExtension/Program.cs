@@ -9,7 +9,7 @@ namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension;
 
 internal class Program
 {
-    static void Main()
+    static async Task Main()
     {
         var config = new ConfigurationBuilder()
             .AddUserSecrets<Program>()
@@ -20,15 +20,17 @@ internal class Program
             config.GetConnectionString("MongoDb")
             ?? "mongodb://localhost:27017";
 
-        var db = MongoDbSetup.EnsureDatabaseAndSeed(mongoConnString);
+        var db = await MongoDbSetup.EnsureDatabaseAndSeedAsync(mongoConnString);
+
         var repo = new GameRepository(db);
+        await repo.InitializeAsync();
 
         Console.CursorVisible = false;
         Console.OutputEncoding = Encoding.UTF8;
 
         StartUpScreen.Draw();
 
-        var activeSave = CharacterSelectMenu.Run(repo);
+        var activeSave = await CharacterSelectMenu.RunAsync(repo);
 
         LevelData levelData = new();
         levelData.LoadFromSave(activeSave);
@@ -67,7 +69,6 @@ internal class Program
             Console.BufferWidth += levelData.LevelWidth + sidebar.Width;
         }
 
-        gameLoop.StartLoop();
+        await gameLoop.StartLoopAsync();
     }
 }
-

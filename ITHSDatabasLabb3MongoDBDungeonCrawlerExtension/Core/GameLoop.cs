@@ -17,7 +17,6 @@ internal class GameLoop
     private readonly SaveGameDocument _activeSave;
     private readonly int _initialEnemyCount;
 
-
     private int _turnCount;
 
     public GameLoop(LevelData levelData,
@@ -44,7 +43,7 @@ internal class GameLoop
         _sidebar.TurnCount = _turnCount;
     }
 
-    public void StartLoop()
+    public async Task StartLoopAsync()
     {
         Console.Clear();
         _renderer.DrawAll();
@@ -68,7 +67,7 @@ internal class GameLoop
 
             if (thePressedKey == ConsoleKey.Escape || thePressedKey == ConsoleKey.Q)
             {
-                SaveAndQuit();
+                await SaveAndQuitAsync();
                 return;
             }
 
@@ -81,7 +80,7 @@ internal class GameLoop
 
             if (thePressedKey == ConsoleKey.Enter || _levelData.GetEnemyCount() <= 0)
             {
-                SaveSnapshotOnly();
+                await SaveSnapshotOnlyAsync();
 
                 VictoryScreen victoryScreen = new();
                 victoryScreen.Victory(_levelData.LevelHeight, _levelData.LevelWidth);
@@ -90,8 +89,8 @@ internal class GameLoop
 
             if (_player.HitPoints.HP <= 0)
             {
-                SaveSnapshotOnly();
-                _repo.MarkDead(_activeSave.Id);
+                await SaveSnapshotOnlyAsync();
+                await _repo.MarkDeadAsync(_activeSave.Id);
 
                 GameOverScreen gameOverScreen = new();
                 gameOverScreen.GameOver(_levelData.LevelHeight, _levelData.LevelWidth);
@@ -100,26 +99,26 @@ internal class GameLoop
         }
     }
 
-    private void SaveAndQuit()
+    private async Task SaveAndQuitAsync()
     {
-        _repo.UpdateSaveFull(_activeSave.Id,
-                             _activeSave,
-                             _levelData,
-                             _player,
-                             _messageLog,
-                             turnCount: _turnCount,
-                             initialEnemyCount: _initialEnemyCount);
+        await _repo.UpdateSaveFullAsync(_activeSave.Id,
+                                       _activeSave,
+                                       _levelData,
+                                       _player,
+                                       _messageLog,
+                                       turnCount: _turnCount,
+                                       initialEnemyCount: _initialEnemyCount);
     }
 
-    private void SaveSnapshotOnly()
+    private async Task SaveSnapshotOnlyAsync()
     {
-        _repo.UpdateSaveFull(_activeSave.Id,
-                             _activeSave,
-                             _levelData,
-                             _player,
-                             _messageLog,
-                             turnCount: _turnCount,
-                             initialEnemyCount: _initialEnemyCount);
+        await _repo.UpdateSaveFullAsync(_activeSave.Id,
+                                       _activeSave,
+                                       _levelData,
+                                       _player,
+                                       _messageLog,
+                                       turnCount: _turnCount,
+                                       initialEnemyCount: _initialEnemyCount);
     }
 
     private void IncrementTurnCount()

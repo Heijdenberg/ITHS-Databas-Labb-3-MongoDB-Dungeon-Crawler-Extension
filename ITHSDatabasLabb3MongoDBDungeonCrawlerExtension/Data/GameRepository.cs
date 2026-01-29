@@ -18,25 +18,37 @@ internal sealed class GameRepository
     {
         _saves = db.GetCollection<SaveGameDocument>(SavesCollectionName);
         _archetypes = db.GetCollection<ArchetypeDocument>(ArchetypesCollectionName);
-
-        var indexKeys = Builders<SaveGameDocument>.IndexKeys.Descending(x => x.LastPlayedUtc);
-        _saves.Indexes.CreateOne(new CreateIndexModel<SaveGameDocument>(indexKeys));
     }
 
-    public List<SaveGameDocument> GetAllSaves()
-        => _saves.Find(FilterDefinition<SaveGameDocument>.Empty)
-                 .SortByDescending(x => x.LastPlayedUtc)
-                 .ToList();
+    public async Task InitializeAsync(CancellationToken ct = default)
+    {
+        var indexKeys = Builders<SaveGameDocument>.IndexKeys.Descending(x => x.LastPlayedUtc);
+        await _saves.Indexes.CreateOneAsync(
+            new CreateIndexModel<SaveGameDocument>(indexKeys),
+            cancellationToken: ct
+        );
+    }
 
-    public SaveGameDocument? GetSave(ObjectId id)
-        => _saves.Find(x => x.Id == id).FirstOrDefault();
+    public async Task<List<SaveGameDocument>> GetAllSavesAsync(CancellationToken ct = default)
+        => await _saves.Find(FilterDefinition<SaveGameDocument>.Empty)
+                       .SortByDescending(x => x.LastPlayedUtc)
+                       .ToListAsync(ct);
 
-    public List<ArchetypeDocument> GetAllArchetypes()
-        => _archetypes.Find(FilterDefinition<ArchetypeDocument>.Empty)
-                      .SortBy(x => x.Name)
-                      .ToList();
+    public async Task<SaveGameDocument?> GetSaveAsync(ObjectId id, CancellationToken ct = default)
+        => await _saves.Find(x => x.Id == id)
+                       .FirstOrDefaultAsync(ct);
 
-    public SaveGameDocument CreateNewSave(string playerName, ObjectId archetypeId, string levelPath, int[] startPos)
+    public async Task<List<ArchetypeDocument>> GetAllArchetypesAsync(CancellationToken ct = default)
+        => await _archetypes.Find(FilterDefinition<ArchetypeDocument>.Empty)
+                            .SortBy(x => x.Name)
+                            .ToListAsync(ct);
+
+    public async Task<SaveGameDocument> CreateNewSaveAsync(
+        string playerName,
+        ObjectId archetypeId,
+        string levelPath,
+        int[] startPos,
+        CancellationToken ct = default)
     {
         var doc = new SaveGameDocument
         {
@@ -58,24 +70,25 @@ internal sealed class GameRepository
             LastPlayedUtc = DateTime.UtcNow
         };
 
-        _saves.InsertOne(doc);
+        await _saves.InsertOneAsync(doc, cancellationToken: ct);
         return doc;
     }
 
-
-    public void TouchLastPlayed(ObjectId saveId)
+    public async Task TouchLastPlayedAsync(ObjectId saveId, CancellationToken ct = default)
     {
         var update = Builders<SaveGameDocument>.Update.Set(x => x.LastPlayedUtc, DateTime.UtcNow);
-        _saves.UpdateOne(x => x.Id == saveId, update);
+        await _saves.UpdateOneAsync(x => x.Id == saveId, update, cancellationToken: ct);
     }
 
-    public void UpdateSaveFull(ObjectId saveId,
-                           SaveGameDocument originalSave,
-                           LevelData levelData,
-                           Player player,
-                           MessageLog messageLog,
-                           int turnCount,
-                           int initialEnemyCount)
+    public async Task UpdateSaveFullAsync(
+        ObjectId saveId,
+        SaveGameDocument originalSave,
+        LevelData levelData,
+        Player player,
+        MessageLog messageLog,
+        int turnCount,
+        int initialEnemyCount,
+        CancellationToken ct = default)
     {
         var playerState = new PlayerStateDocument
         {
@@ -136,21 +149,20 @@ internal sealed class GameRepository
             .Set(x => x.Player, playerState)
             .Set(x => x.Elements, elementStates)
             .Set(x => x.Messages, messages)
-            .Set(x => x.LastPlayedUtc, DateTime.UtcNow)
             .Set(x => x.TurnCount, turnCount)
             .Set(x => x.InitialEnemyCount, initialEnemyCount)
             .Set(x => x.LastPlayedUtc, DateTime.UtcNow);
 
-        _saves.UpdateOne(x => x.Id == saveId, update);
+        await _saves.UpdateOneAsync(x => x.Id == saveId, update, cancellationToken: ct);
     }
-    public void MarkDead(ObjectId saveId)
+
+    public async Task MarkDeadAsync(ObjectId saveId, CancellationToken ct = default)
     {
         var update = Builders<SaveGameDocument>.Update
             .Set(x => x.IsDead, true)
             .Set(x => x.DiedUtc, DateTime.UtcNow)
             .Set(x => x.LastPlayedUtc, DateTime.UtcNow);
 
-        _saves.UpdateOne(x => x.Id == saveId, update);
+        await _saves.UpdateOneAsync(x => x.Id == saveId, update, cancellationToken: ct);
     }
-
 }
