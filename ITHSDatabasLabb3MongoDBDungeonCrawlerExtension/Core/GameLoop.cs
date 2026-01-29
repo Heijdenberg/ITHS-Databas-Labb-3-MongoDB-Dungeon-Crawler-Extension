@@ -67,7 +67,20 @@ internal class GameLoop
 
             if (thePressedKey == ConsoleKey.Escape || thePressedKey == ConsoleKey.Q)
             {
-                await SaveAndQuitAsync();
+                bool saved = await SaveAndQuitAsync();
+                Console.Clear();
+                if (saved)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("Game saved and exited!");
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Failed to save!");
+                }
+
+                Console.ResetColor();
                 return;
             }
 
@@ -99,15 +112,23 @@ internal class GameLoop
         }
     }
 
-    private async Task SaveAndQuitAsync()
+    private async Task<bool> SaveAndQuitAsync()
     {
-        await _repo.UpdateSaveFullAsync(_activeSave.Id,
-                                       _activeSave,
-                                       _levelData,
-                                       _player,
-                                       _messageLog,
-                                       turnCount: _turnCount,
-                                       initialEnemyCount: _initialEnemyCount);
+        try
+        {
+            await _repo.UpdateSaveFullAsync(_activeSave.Id,
+                                           _activeSave,
+                                           _levelData,
+                                           _player,
+                                           _messageLog,
+                                           turnCount: _turnCount,
+                                           initialEnemyCount: _initialEnemyCount);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private async Task SaveSnapshotOnlyAsync()

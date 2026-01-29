@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Microsoft.Extensions.Configuration;
+using MongoDB.Driver;
 
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Core;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Data;
@@ -20,10 +21,51 @@ internal class Program
             config.GetConnectionString("MongoDb")
             ?? "mongodb://localhost:27017";
 
-        var db = await MongoDbSetup.EnsureDatabaseAndSeedAsync(mongoConnString);
+        IMongoDatabase db;
+        GameRepository repo;
 
-        var repo = new GameRepository(db);
-        await repo.InitializeAsync();
+        try
+        {
+            db = await MongoDbSetup.EnsureDatabaseAndSeedAsync(mongoConnString);
+            repo = new GameRepository(db);
+            await repo.InitializeAsync();
+        }
+        catch (MongoConfigurationException ex)
+        {
+            Console.WriteLine("MongoDB configuration error.");
+            Console.WriteLine(ex.Message);
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey(true);
+            return;
+        }
+        catch (MongoConnectionException ex)
+        {
+            Console.WriteLine("Could not connect to MongoDB.");
+            Console.WriteLine("Is MongoDB installed and running?");
+            Console.WriteLine($"Connection string: {mongoConnString}");
+            Console.WriteLine(ex.Message);
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey(true);
+            return;
+        }
+        catch (TimeoutException ex)
+        {
+            Console.WriteLine("MongoDB connection timed out.");
+            Console.WriteLine("Is the server running at the configured address?");
+            Console.WriteLine($"Connection string: {mongoConnString}");
+            Console.WriteLine(ex.Message);
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey(true);
+            return;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Unexpected error during DB startup:");
+            Console.WriteLine(ex);
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey(true);
+            return;
+        }
 
         Console.CursorVisible = false;
         Console.OutputEncoding = Encoding.UTF8;
