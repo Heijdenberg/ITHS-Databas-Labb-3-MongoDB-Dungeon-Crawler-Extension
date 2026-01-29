@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI
+﻿namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI
 {
     internal class StartUpScreen
     {
-        public static void Draw()
+        public static async Task DrawAsync()
         {
             string StartText =
 @"
@@ -31,15 +25,46 @@ namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI
        |____|_  /(____  /__| /____  >        
               \/      \/          \/         
 ";
+
+            Console.Clear();
             Console.WriteLine(StartText);
-            Thread.Sleep(2000);
+            Console.WriteLine("\nPress any key to skip...");
+
+            if (await WaitForKeyOrDelayAsync(2000))
+                return;
+
             Console.SetCursorPosition(0, 0);
 
             for (int i = 0; i < 19; i++)
             {
-                Console.WriteLine(new string(' ',100));
-                Thread.Sleep(200);
+                Console.WriteLine(new string(' ', 100));
+
+                if (await WaitForKeyOrDelayAsync(200))
+                    return;
             }
+        }
+
+        private static async Task<bool> WaitForKeyOrDelayAsync(int milliseconds)
+        {
+            int step = 25;
+            int waited = 0;
+
+            while (waited < milliseconds)
+            {
+                if (Console.KeyAvailable)
+                {
+                    Console.ReadKey(intercept: true);
+                    return true;
+                }
+
+                int remaining = milliseconds - waited;
+                int chunk = remaining < step ? remaining : step;
+
+                await Task.Delay(chunk);
+                waited += chunk;
+            }
+
+            return false;
         }
     }
 }

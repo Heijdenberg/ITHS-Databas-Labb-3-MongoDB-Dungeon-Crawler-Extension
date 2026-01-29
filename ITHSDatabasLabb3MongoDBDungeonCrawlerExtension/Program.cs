@@ -1,10 +1,9 @@
-﻿using System.Text;
-using Microsoft.Extensions.Configuration;
-using MongoDB.Driver;
-
-using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Core;
+﻿using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Core;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Data;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
+using Microsoft.Extensions.Configuration;
+using MongoDB.Driver;
+using System.Text;
 
 namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension;
 
@@ -42,7 +41,6 @@ internal class Program
         {
             Console.WriteLine("Could not connect to MongoDB.");
             Console.WriteLine("Is MongoDB installed and running?");
-            Console.WriteLine($"Connection string: {mongoConnString}");
             Console.WriteLine(ex.Message);
             Console.WriteLine("\nPress any key to exit...");
             Console.ReadKey(true);
@@ -52,7 +50,6 @@ internal class Program
         {
             Console.WriteLine("MongoDB connection timed out.");
             Console.WriteLine("Is the server running at the configured address?");
-            Console.WriteLine($"Connection string: {mongoConnString}");
             Console.WriteLine(ex.Message);
             Console.WriteLine("\nPress any key to exit...");
             Console.ReadKey(true);
@@ -70,7 +67,7 @@ internal class Program
         Console.CursorVisible = false;
         Console.OutputEncoding = Encoding.UTF8;
 
-        StartUpScreen.Draw();
+        await StartUpScreen.DrawAsync();
 
         var activeSave = await CharacterSelectMenu.RunAsync(repo);
 

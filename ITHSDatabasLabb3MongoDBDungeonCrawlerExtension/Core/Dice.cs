@@ -1,9 +1,4 @@
 ﻿using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Core;
 
@@ -20,7 +15,11 @@ internal class Dice
         _modifier = modifier;
     }
 
-    public int Modifier { get; set; }
+    public int Modifier
+    {
+        get => _modifier;
+        set => _modifier = value;
+    }
 
     public int Throw()
     {

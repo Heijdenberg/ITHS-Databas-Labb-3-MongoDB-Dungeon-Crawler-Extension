@@ -2,7 +2,6 @@
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Elements;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Interfaces;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
-using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Utilities;
 
 namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Core;
 

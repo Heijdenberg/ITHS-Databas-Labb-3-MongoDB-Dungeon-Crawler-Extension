@@ -165,4 +165,7 @@ internal sealed class GameRepository
 
         await _saves.UpdateOneAsync(x => x.Id == saveId, update, cancellationToken: ct);
     }
+
+    public async Task DeleteSaveAsync(ObjectId saveId, CancellationToken ct = default)
+    => await _saves.DeleteOneAsync(x => x.Id == saveId, cancellationToken: ct);
 }

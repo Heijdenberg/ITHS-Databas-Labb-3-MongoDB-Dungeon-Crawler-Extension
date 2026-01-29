@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-
-namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
+﻿namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
 
 internal class GameOverScreen
 {

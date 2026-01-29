@@ -1,5 +1,4 @@
-﻿using MongoDB.Bson;
-using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Data;
+﻿using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Data;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Elements;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
 

@@ -1,12 +1,5 @@
-﻿using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Elements;
-using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Interfaces;
+﻿using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Interfaces;
 using ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.Core;
 
