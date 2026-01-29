@@ -13,14 +13,13 @@ internal class Sidebar
     private int _turnCount = 0;
     private readonly int _enemyStartCount;
 
-    // Layout rows (relative to sidebar top)
     private const int RowHearts = 1;
-    private const int RowStatsStart = 3;     // 5 lines: Player, HP, Turn, Enemies, Attack mod
+    private const int RowStatsStart = 3;
     private const int RowGoalTitle = 8;
     private const int RowGoalContent = 9;
     private const int RowControlsTitle = 10;
-    private const int RowControlsStart = 11; // 3 lines
-    private const int TotalLines = 15;       // 0..14
+    private const int RowControlsStart = 11;
+    private const int TotalLines = 15;
 
     public Sidebar(int levelHeight, int levelWidth, Player player, LevelData levelData, int initialEnemyCount)
     {
@@ -50,30 +49,23 @@ internal class Sidebar
 
     private void DrawLayout()
     {
-        // Top title line
         WriteTitleLine(0, '╔', '╗', "Life");
 
-        // Hearts area (1 line)
         WriteEmptyLine(RowHearts);
 
-        // Divider line (no title)
         WriteDividerLine(2);
 
-        // Stats area: 5 lines
         for (int r = RowStatsStart; r < RowStatsStart + 5; r++)
             WriteEmptyLine(r);
 
-        // Goal section
         WriteTitleLine(RowGoalTitle, '╠', '╣', "Goal");
         WriteEmptyLine(RowGoalContent);
 
-        // Controls section
         WriteTitleLine(RowControlsTitle, '╠', '╣', "Controls");
         WriteEmptyLine(RowControlsStart);
         WriteEmptyLine(RowControlsStart + 1);
         WriteEmptyLine(RowControlsStart + 2);
 
-        // Bottom
         Console.SetCursorPosition(_x, TotalLines - 1);
         Console.WriteLine($"╚{new string('═', _width - 2)}╝");
     }
@@ -92,7 +84,6 @@ internal class Sidebar
 
     private void WriteTitleLine(int row, char left, char right, string title)
     {
-        // Format: left + "═ " + title + " " + fill + right  (total width = _width)
         int fillCount = _width - (title.Length + 5);
         if (fillCount < 0) fillCount = 0;
 
@@ -105,11 +96,10 @@ internal class Sidebar
         int hearts = _player.HitPoints.HP / 5;
         if (hearts <= 0) hearts = 1;
 
-        // Hearts line fits well for max HP=100 (20 hearts) with width=24
         Console.SetCursorPosition(_x + 2, row);
         Console.ForegroundColor = ConsoleColor.Red;
 
-        int maxHeartsOnLine = _width - 4; // inside padding
+        int maxHeartsOnLine = _width - 4;
         hearts = Math.Min(hearts, maxHeartsOnLine);
 
         for (int i = 0; i < hearts; i++)
@@ -141,7 +131,6 @@ internal class Sidebar
 
     private void WriteText(int row, string text)
     {
-        // Write inside the borders and clear the line first
         int max = _width - 4;
 
         Console.SetCursorPosition(_x + 1, row);
