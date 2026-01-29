@@ -4,22 +4,31 @@ namespace ITHSDatabasLabb3MongoDBDungeonCrawlerExtension.UI;
 
 internal class Sidebar
 {
-    private readonly int _height;
     private readonly int _width;
     private readonly int _x;
+
     private readonly Player _player;
+    private readonly LevelData _levelData;
+
     private int _turnCount = 0;
-    private int _enemyStartCount;
-    private LevelData _levelData;
+    private readonly int _enemyStartCount;
+
+    // Layout rows (relative to sidebar top)
+    private const int RowHearts = 1;
+    private const int RowStatsStart = 3;     // 5 lines: Player, HP, Turn, Enemies, Attack mod
+    private const int RowGoalTitle = 8;
+    private const int RowGoalContent = 9;
+    private const int RowControlsTitle = 10;
+    private const int RowControlsStart = 11; // 3 lines
+    private const int TotalLines = 15;       // 0..14
 
     public Sidebar(int levelHeight, int levelWidth, Player player, LevelData levelData, int initialEnemyCount)
     {
-        _height = 5;
         _width = 24;
         _x = levelWidth + 1;
+
         _player = player;
         _levelData = levelData;
-
         _enemyStartCount = initialEnemyCount;
     }
 
@@ -28,102 +37,118 @@ internal class Sidebar
         set { _turnCount = value; }
     }
 
-    public int Width
-    {
-        get { return _width; }
-    }
+    public int Width => _width;
 
     public void Draw()
     {
-        DrawBox();
-        DrawLifeCounter();
-        DrawGameStats(3);
-        DrawGoal(10);
+        DrawLayout();
+        DrawLifeCounter(RowHearts);
+        DrawGameStats(RowStatsStart);
+        DrawGoal(RowGoalContent);
+        DrawControls(RowControlsStart);
     }
 
-    private void DrawBox()
+    private void DrawLayout()
     {
-        Console.SetCursorPosition(_x, 0);
-        Console.WriteLine($"╔═ Life {new string('═', _width - 9)}╗");
-        Console.SetCursorPosition(_x, Console.GetCursorPosition().Top);
-        Console.WriteLine($"║{new string(' ', _width - 2)}║");
-        Console.SetCursorPosition(_x, Console.GetCursorPosition().Top);
-        Console.WriteLine($"╠{new string('═', _width - 2)}╣");
-        Console.SetCursorPosition(_x, Console.GetCursorPosition().Top);
+        // Top title line
+        WriteTitleLine(0, '╔', '╗', "Life");
 
-        for (int i = 0; i < _height; i++)
-        {
-            Console.SetCursorPosition(_x, Console.GetCursorPosition().Top);
-            Console.WriteLine($"║{new string(' ', _width - 2)}║");
-        }
+        // Hearts area (1 line)
+        WriteEmptyLine(RowHearts);
 
-        Console.SetCursorPosition(_x, Console.GetCursorPosition().Top);
+        // Divider line (no title)
+        WriteDividerLine(2);
+
+        // Stats area: 5 lines
+        for (int r = RowStatsStart; r < RowStatsStart + 5; r++)
+            WriteEmptyLine(r);
+
+        // Goal section
+        WriteTitleLine(RowGoalTitle, '╠', '╣', "Goal");
+        WriteEmptyLine(RowGoalContent);
+
+        // Controls section
+        WriteTitleLine(RowControlsTitle, '╠', '╣', "Controls");
+        WriteEmptyLine(RowControlsStart);
+        WriteEmptyLine(RowControlsStart + 1);
+        WriteEmptyLine(RowControlsStart + 2);
+
+        // Bottom
+        Console.SetCursorPosition(_x, TotalLines - 1);
         Console.WriteLine($"╚{new string('═', _width - 2)}╝");
-        Console.SetCursorPosition(_x + 1, 1);
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.SetCursorPosition(_x + 2, Console.GetCursorPosition().Top);
     }
 
-    private void DrawLifeCounter()
+    private void WriteEmptyLine(int row)
+    {
+        Console.SetCursorPosition(_x, row);
+        Console.WriteLine($"║{new string(' ', _width - 2)}║");
+    }
+
+    private void WriteDividerLine(int row)
+    {
+        Console.SetCursorPosition(_x, row);
+        Console.WriteLine($"╠{new string('═', _width - 2)}╣");
+    }
+
+    private void WriteTitleLine(int row, char left, char right, string title)
+    {
+        // Format: left + "═ " + title + " " + fill + right  (total width = _width)
+        int fillCount = _width - (title.Length + 5);
+        if (fillCount < 0) fillCount = 0;
+
+        Console.SetCursorPosition(_x, row);
+        Console.WriteLine($"{left}═ {title} {new string('═', fillCount)}{right}");
+    }
+
+    private void DrawLifeCounter(int row)
     {
         int hearts = _player.HitPoints.HP / 5;
+        if (hearts <= 0) hearts = 1;
 
-        if (hearts == 0)
-        {
-            hearts = 1;
-        }
+        // Hearts line fits well for max HP=100 (20 hearts) with width=24
+        Console.SetCursorPosition(_x + 2, row);
+        Console.ForegroundColor = ConsoleColor.Red;
 
-        while (hearts > 0)
-        {
+        int maxHeartsOnLine = _width - 4; // inside padding
+        hearts = Math.Min(hearts, maxHeartsOnLine);
+
+        for (int i = 0; i < hearts; i++)
             Console.Write('♥');
-            if (hearts % (_width - 2) == 1)
-            {
-                Console.WriteLine();
-                Console.SetCursorPosition(_x + 2, Console.GetCursorPosition().Top);
-            }
-            hearts--;
-        }
 
         Console.ResetColor();
     }
 
     private void DrawGameStats(int startLine)
     {
-        Console.SetCursorPosition(_x + 1, startLine);
-        Console.WriteLine($" Player: {_player.Name}");
-        startLine++;
-
-        Console.SetCursorPosition(_x + 1, startLine);
-        Console.WriteLine($" HP: {_player.HitPoints.HP}");
-        startLine++;
-
-        Console.SetCursorPosition(_x + 1, startLine);
-        Console.WriteLine($" Turn: {_turnCount}");
-        startLine++;
-
-        Console.SetCursorPosition(_x + 1, startLine);
-        Console.WriteLine($" Enemys: {_levelData.GetEnemyCount()} of {_enemyStartCount}");
-        startLine++;
-
-        Console.SetCursorPosition(_x + 1, startLine);
-        Console.WriteLine($" Attack modifier: {_player.AttackDice.Modifier}");
+        WriteText(startLine + 0, $" Player: {_player.Name}");
+        WriteText(startLine + 1, $" HP: {_player.HitPoints.HP}");
+        WriteText(startLine + 2, $" Turn: {_turnCount}");
+        WriteText(startLine + 3, $" Enemys: {_levelData.GetEnemyCount()} of {_enemyStartCount}");
+        WriteText(startLine + 4, $" Attack mod: {_player.AttackDice.Modifier}");
     }
 
-    private void DrawGoal(int startLine)
+    private void DrawGoal(int row)
     {
-        Console.SetCursorPosition(_x, startLine);
-        Console.WriteLine($"╔═ Goal {new string('═', _width - 9)}╗");
-        startLine++;
+        WriteText(row, "♦ Kill all enemies");
+    }
 
-        Console.SetCursorPosition(_x, startLine);
-        Console.WriteLine($"║{new string(' ', _width - 2)}║");
-        startLine++;
+    private void DrawControls(int startRow)
+    {
+        WriteText(startRow + 0, "Move: WASD/↑↓←→");
+        WriteText(startRow + 1, "Save/Quit: Q/Esc");
+        WriteText(startRow + 2, "Messages: M");
+    }
 
-        Console.SetCursorPosition(_x, startLine);
-        Console.WriteLine($"╚{new string('═', _width - 2)}╝");
-        startLine--;
+    private void WriteText(int row, string text)
+    {
+        // Write inside the borders and clear the line first
+        int max = _width - 4;
 
-        Console.SetCursorPosition(_x + 2, startLine);
-        Console.WriteLine($"♦ Kill all enemies");
+        Console.SetCursorPosition(_x + 1, row);
+        Console.Write(new string(' ', _width - 2));
+
+        Console.SetCursorPosition(_x + 2, row);
+        if (text.Length > max) text = text.Substring(0, max);
+        Console.Write(text);
     }
 }
